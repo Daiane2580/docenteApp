@@ -11,7 +11,7 @@ import {
 
 import { sections, saveFormToStorage } from "../storage/formsStorage";
 import QuestionSection from "../components/QuestionSection";
-import SignaturePad from "../components/SignaturePad";
+import SignatureModal from "../components/SignatureModal";
 
 export default function FormScreen({ navigation }: any) {
   const [form, setForm] = useState<any>({
@@ -27,7 +27,11 @@ export default function FormScreen({ navigation }: any) {
     respostas: {},
   });
 
-  // Atualiza qualquer campo de texto
+  // Estados de modais
+  const [openDocente, setOpenDocente] = useState(false);
+  const [openCoordenador, setOpenCoordenador] = useState(false);
+
+  // Atualiza qualquer campo
   function update(key: string, value: string) {
     setForm((prev: any) => ({ ...prev, [key]: value }));
   }
@@ -56,7 +60,7 @@ export default function FormScreen({ navigation }: any) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Acompanhamento da Ação Docente</Text>
 
-      {/* ===== Campos principais ===== */}
+      {/* ===================== CAMPOS PRINCIPAIS ===================== */}
       <Text style={styles.label}>Curso</Text>
       <TextInput
         style={styles.input}
@@ -100,7 +104,7 @@ export default function FormScreen({ navigation }: any) {
         onChangeText={(v) => update("conteudo", v)}
       />
 
-      {/* ========== Perguntas ========== */}
+      {/* ===================== PERGUNTAS ===================== */}
       {sections.map((section, si) => (
         <QuestionSection
           key={si}
@@ -111,18 +115,35 @@ export default function FormScreen({ navigation }: any) {
         />
       ))}
 
-      {/* ================= Assinaturas ================= */}
-      <SignaturePad
-        label="Assinatura do Docente"
-        onSave={(img) => update("assinatura_docente", img)}
-      />
+      {/* ===================== ASSINATURA DOCENTE ===================== */}
+      <Text style={styles.label}>Assinatura do Docente</Text>
 
-      <SignaturePad
-        label="Assinatura do Coordenador"
-        onSave={(img) => update("assinatura_coordenador", img)}
-      />
+      <TouchableOpacity
+        style={styles.btnAssinar}
+        onPress={() => setOpenDocente(true)}
+      >
+        <Text style={styles.btnAssinarText}>Assinar</Text>
+      </TouchableOpacity>
 
-      {/* ================= Botões ================= */}
+      {form.assinatura_docente !== "" && (
+        <Text style={styles.previewText}>Assinatura registrada ✔</Text>
+      )}
+
+      {/* ===================== ASSINATURA COORDENADOR ===================== */}
+      <Text style={styles.label}>Assinatura do Coordenador</Text>
+
+      <TouchableOpacity
+        style={styles.btnAssinar}
+        onPress={() => setOpenCoordenador(true)}
+      >
+        <Text style={styles.btnAssinarText}>Assinar</Text>
+      </TouchableOpacity>
+
+      {form.assinatura_coordenador !== "" && (
+        <Text style={styles.previewText}>Assinatura registrada ✔</Text>
+      )}
+
+      {/* ===================== BOTÕES ===================== */}
       <TouchableOpacity style={styles.btn} onPress={salvarFormulario}>
         <Text style={styles.btnText}>Salvar Formulário</Text>
       </TouchableOpacity>
@@ -133,6 +154,21 @@ export default function FormScreen({ navigation }: any) {
       >
         <Text style={styles.btnText}>Ver Formulários Salvos</Text>
       </TouchableOpacity>
+
+      {/* ===================== MODAIS ===================== */}
+      <SignatureModal
+        visible={openDocente}
+        onClose={() => setOpenDocente(false)}
+        onSave={(img) => update("assinatura_docente", img)}
+        title="Assinatura do Docente"
+      />
+
+      <SignatureModal
+        visible={openCoordenador}
+        onClose={() => setOpenCoordenador(false)}
+        onSave={(img) => update("assinatura_coordenador", img)}
+        title="Assinatura do Coordenador"
+      />
     </ScrollView>
   );
 }
@@ -163,6 +199,25 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     fontSize: 14,
+  },
+
+  btnAssinar: {
+    backgroundColor: "#198754",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+
+  btnAssinarText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+
+  previewText: {
+    color: "green",
+    fontSize: 13,
+    marginBottom: 10,
   },
 
   btn: {
