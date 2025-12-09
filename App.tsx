@@ -26,6 +26,7 @@ export default function App() {
           component={PreviewScreen}
           options={{ title: "Visualização" }}
         />
+        {/* teste */}
       </Stack.Navigator>
     </NavigationContainer>
   );
