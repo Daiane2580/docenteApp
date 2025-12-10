@@ -14,7 +14,7 @@ export default function App() {
         <Stack.Screen
           name="Form"
           component={FormScreen}
-          options={{ title: "Ação Docente" }}
+          options={{ title: "SENAI - Ação Docente" }}
         />
         <Stack.Screen
           name="Saved"

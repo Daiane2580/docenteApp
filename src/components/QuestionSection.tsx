@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 
 interface Section {
   title: string;
@@ -10,6 +16,7 @@ interface Props {
   section: Section;
   sectionIndex: number;
   respostas: Record<string, string>;
+  errors: Record<string, boolean>;
   onSelect: (questionId: string, value: string) => void;
 }
 
@@ -17,6 +24,7 @@ export default function QuestionSection({
   section,
   sectionIndex,
   respostas,
+  errors,
   onSelect,
 }: Props) {
   const options = ["Sim", "Não", "Em Parte", "NA"];
@@ -36,16 +44,28 @@ export default function QuestionSection({
             {/* Pergunta */}
             <Text style={styles.questionText}>{question}</Text>
 
-            {/* Campo de observações (quando necessário) */}
+            {/* Campo de Observações */}
             {isTextArea && (
-              <Text style={styles.obsHint}>
-                (Este campo será preenchido lá no formulário principal)
-              </Text>
+              <TextInput
+                style={[
+                  styles.textArea,
+                  errors[questionId] && styles.inputError,
+                ]}
+                value={selected}
+                onChangeText={(v) => onSelect(questionId, v)}
+                placeholder="Digite aqui..."
+                multiline
+              />
             )}
 
-            {/* Opções (Radio buttons customizados) */}
+            {/* Opções */}
             {!isTextArea && (
-              <View style={styles.optionsRow}>
+              <View
+                style={[
+                  styles.optionsRow,
+                  errors[questionId] && styles.errorBox,
+                ]}
+              >
                 {options.map((opt) => (
                   <TouchableOpacity
                     key={opt}
@@ -78,49 +98,46 @@ const styles = StyleSheet.create({
     borderColor: "#e0eaff",
     marginTop: 16,
   },
-
   sectionTitle: {
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 10,
   },
-
   questionContainer: {
     marginBottom: 14,
   },
-
   questionText: {
     fontSize: 14,
     marginBottom: 6,
     color: "#333",
   },
-
-  obsHint: {
-    fontSize: 12,
-    fontStyle: "italic",
-    color: "#777",
-    marginBottom: 10,
+  textArea: {
+    minHeight: 80,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#bbb",
+    padding: 10,
+    borderRadius: 8,
+    textAlignVertical: "top",
+    fontSize: 14,
   },
-
   optionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
     alignItems: "center",
     paddingLeft: 4,
+    paddingVertical: 6,
   },
-
   optionBtn: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 12,
     marginTop: 4,
   },
-
   optionText: {
     fontSize: 13,
   },
-
   radioCircle: {
     width: 18,
     height: 18,
@@ -131,11 +148,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 6,
   },
-
   radioSelected: {
     width: 10,
     height: 10,
     borderRadius: 10,
     backgroundColor: "#0b6efd",
+  },
+  inputError: {
+    borderColor: "red",
+    borderWidth: 2,
+  },
+  errorBox: {
+    borderColor: "red",
+    borderWidth: 2,
+    borderRadius: 6,
+    padding: 6,
   },
 });

@@ -1,3 +1,7 @@
+// ======================================================
+// IMPORTS
+// ======================================================
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -83,7 +87,28 @@ export const sections = [
 ];
 
 // ======================================================
-// 2. SALVAR FORMULÁRIO
+// 2. MAPEAR RESPOSTAS (CORRIGIDO)
+// ======================================================
+
+export function mapearRespostas(respostas: Record<string, string>) {
+  const resultado: { pergunta: string; resposta: string }[] = [];
+
+  Object.entries(respostas).forEach(([id, resp]) => {
+    const [_q, si, qi] = id.split("_").map(Number);
+
+    const textoPergunta = sections[si]?.items[qi] || `Pergunta ${id}`;
+
+    resultado.push({
+      pergunta: textoPergunta,
+      resposta: resp,
+    });
+  });
+
+  return resultado;
+}
+
+// ======================================================
+// 3. SALVAR FORMULÁRIO
 // ======================================================
 
 const STORAGE_KEY = "senai_forms_v1";
@@ -105,7 +130,7 @@ export async function saveFormToStorage(form: any) {
 }
 
 // ======================================================
-// 3. LER FORMULÁRIOS
+// 4. LER FORMULÁRIOS
 // ======================================================
 
 export async function getSavedForms() {
@@ -114,7 +139,7 @@ export async function getSavedForms() {
 }
 
 // ======================================================
-// 4. EXCLUIR FORMULÁRIO
+// 5. EXCLUIR FORMULÁRIO
 // ======================================================
 
 export async function deleteForm(index: number) {
@@ -126,10 +151,14 @@ export async function deleteForm(index: number) {
 }
 
 // ======================================================
-// 5. EXPORTAR PARA PDF (100% EXPO)
+// 6. EXPORTAR PARA PDF (COM PERGUNTAS REAIS)
 // ======================================================
 
 export async function exportToPdf(form: any) {
+  const respostasFormatadas = mapearRespostas(form.respostas)
+    .map((item) => `<p><b>${item.pergunta}:</b> ${item.resposta}</p>`)
+    .join("");
+
   const html = `
     <h1 style="text-align:center;">ESCOLA SENAI DE LENÇÓIS PAULISTA</h1>
     <h2 style="text-align:center;">ACOMPANHAMENTO DA AÇÃO DOCENTE</h2>
@@ -145,30 +174,24 @@ export async function exportToPdf(form: any) {
     <p>${form.conteudo}</p>
 
     <h3>Respostas</h3>
-    <ul>
-      ${Object.keys(form.respostas || {})
-        .map(
-          (key) =>
-            `<li><strong>${key}:</strong> ${form.respostas[key] || ""}</li>`
-        )
-        .join("")}
-    </ul>
+    ${respostasFormatadas}
 
     <h3>Observações</h3>
     <p>${form.observacoes || ""}</p>
 
-    <h3>Assinatura do Docente</h3>
+    <h3>Assinaturas</h3>
+    <p><b>Docente:</b></p>
     ${
       form.assinatura_docente
-        ? `<img src="${form.assinatura_docente}" width="300" />`
-        : "<p>(Sem assinatura)</p>"
+        ? `<img src="${form.assinatura_docente}" width="300"/>`
+        : "(Sem assinatura)"
     }
 
-    <h3>Assinatura do Coordenador</h3>
+    <p><b>Coordenador:</b></p>
     ${
       form.assinatura_coordenador
-        ? `<img src="${form.assinatura_coordenador}" width="300" />`
-        : "<p>(Sem assinatura)</p>"
+        ? `<img src="${form.assinatura_coordenador}" width="300"/>`
+        : "(Sem assinatura)"
     }
   `;
 
@@ -178,17 +201,15 @@ export async function exportToPdf(form: any) {
 }
 
 // ======================================================
-// 6. EXPORTAR ZIP (100% EXPO, ZERO ERROS)
+// 7. EXPORTAR ZIP (FUNCIONAL)
 // ======================================================
 
 export async function exportToZip(form: any) {
   try {
     const zip = new JSZip();
 
-    // JSON
     zip.file("form.json", JSON.stringify(form, null, 2));
 
-    // Assinatura docente
     if (form.assinatura_docente) {
       const base64 = form.assinatura_docente.replace(
         /^data:image\/\w+;base64,/,
@@ -197,7 +218,6 @@ export async function exportToZip(form: any) {
       zip.file("assinatura_docente.jpg", base64, { base64: true });
     }
 
-    // Assinatura coordenador
     if (form.assinatura_coordenador) {
       const base64 = form.assinatura_coordenador.replace(
         /^data:image\/\w+;base64,/,
@@ -206,19 +226,14 @@ export async function exportToZip(form: any) {
       zip.file("assinatura_coordenador.jpg", base64, { base64: true });
     }
 
-    // Gerar base64
     const zippedBase64 = await zip.generateAsync({ type: "base64" });
 
-    // Caminho no Expo
     const path = FileSystem.cacheDirectory + `form_${Date.now()}.zip`;
-
-    // Gravar arquivo ZIP
 
     await FileSystem.writeAsStringAsync(path, zippedBase64, {
       encoding: "base64",
     });
 
-    // Compartilhar
     await Sharing.shareAsync(path);
   } catch (error) {
     console.log("Erro ao gerar ZIP:", error);

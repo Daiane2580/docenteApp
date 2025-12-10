@@ -1,32 +1,27 @@
 import React, { useRef } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from "react-native";
-import Signature from "react-native-signature-canvas";
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import SignatureScreen from "react-native-signature-canvas";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSave: (base64: string) => void;
-  title?: string;
+  onSave: (signature: string) => void;
+  title: string;
 }
 
 export default function SignatureModal({
   visible,
   onClose,
   onSave,
-  title = "Assine abaixo",
+  title,
 }: Props) {
   const ref = useRef<any>(null);
 
   function handleOK(signature: string) {
-    onSave(signature);
-    onClose();
+    if (signature) {
+      onSave(signature);
+      onClose();
+    }
   }
 
   function handleClear() {
@@ -35,95 +30,117 @@ export default function SignatureModal({
 
   return (
     <Modal visible={visible} animationType="slide">
-      <SafeAreaView style={styles.modalArea}>
+      <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
 
+        {/* ÁREA BRANCA DE ASSINATURA */}
         <View style={styles.signatureBox}>
-          <Signature
+          <SignatureScreen
             ref={ref}
             onOK={handleOK}
-            onEmpty={() => console.log("Assinatura vazia")}
-            descriptionText="Assine aqui"
-            clearText="Limpar"
-            confirmText="Salvar"
-            webStyle={webStyle}
+            onClear={handleClear}
+            autoClear={false}
+            descriptionText=""
+            backgroundColor="#ffffff"
+            webStyle={signatureWebStyle}
           />
         </View>
 
-        {/* Botões */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.btn} onPress={handleClear}>
+        {/* BOTÕES */}
+        <View style={styles.row}>
+          <TouchableOpacity style={styles.btnClear} onPress={handleClear}>
             <Text style={styles.btnText}>Limpar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.btnClose} onPress={onClose}>
-            <Text style={styles.btnText}>Fechar</Text>
+          <TouchableOpacity
+            style={styles.btnSave}
+            onPress={() => ref.current?.readSignature()}
+          >
+            <Text style={styles.btnText}>Salvar</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+
+        <TouchableOpacity style={styles.btnClose} onPress={onClose}>
+          <Text style={styles.btnCloseText}>Fechar</Text>
+        </TouchableOpacity>
+      </View>
     </Modal>
   );
 }
 
-const webStyle = `
+const signatureWebStyle = `
   .m-signature-pad {
-    border: 2px solid #444 !important;
-    border-radius: 6px;
-  }
-  .m-signature-pad--body {
-    height: 300px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px;
   }
   .m-signature-pad--footer {
-    display: none; 
+    display: none;
   }
 `;
 
 const styles = StyleSheet.create({
-  modalArea: {
+  container: {
     flex: 1,
-    backgroundColor: "#f2f2f2",
     padding: 16,
+    backgroundColor: "#f2f2f2",
   },
 
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
     textAlign: "center",
+    marginBottom: 15,
   },
 
   signatureBox: {
-    backgroundColor: "#fff",
     flex: 1,
-    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#aaa",
+    borderRadius: 10,
     overflow: "hidden",
+    backgroundColor: "#fff",
   },
 
-  footer: {
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 12,
   },
 
-  btn: {
-    backgroundColor: "#0b6efd",
-    padding: 12,
-    borderRadius: 8,
+  btnClear: {
+    backgroundColor: "#dc3545",
+    padding: 14,
+    borderRadius: 10,
     flex: 1,
-    marginRight: 8,
+    marginRight: 6,
+  },
+
+  btnSave: {
+    backgroundColor: "#198754",
+    padding: 14,
+    borderRadius: 10,
+    flex: 1,
+    marginLeft: 6,
+  },
+
+  btnText: {
+    textAlign: "center",
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 
   btnClose: {
     backgroundColor: "#6c757d",
-    padding: 12,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 15,
   },
 
-  btnText: {
-    color: "#fff",
+  btnCloseText: {
     textAlign: "center",
-    fontWeight: "600",
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
